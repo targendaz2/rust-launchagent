@@ -1,0 +1,20 @@
+{
+  "[json][jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.tabSize": 2
+  },
+  "[markdown][instructions]": {
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "[toml]": {
+    "editor.defaultFormatter": "tamasfe.even-better-toml"
+  },
+  "editor.tabSize": 4,
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "LICENSE*": "plaintext"
+  }
+}
