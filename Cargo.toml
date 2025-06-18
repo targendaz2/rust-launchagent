@@ -1,0 +1,10 @@
+[package]
+name = "launchagent"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0"
+derive_builder = "0.20"
+plist = "1.7"
+serde = { version = "1.0", features = ["derive"] }
