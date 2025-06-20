@@ -1,7 +1,7 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
-use crate::common::default_false;
+use crate::defaults::default_false;
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]

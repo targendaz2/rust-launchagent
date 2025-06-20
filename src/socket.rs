@@ -1,7 +1,7 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
-use crate::common::StringOrInt;
+use crate::unions::StringOrU32;
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
@@ -31,7 +31,7 @@ pub struct Socket {
     /// This optional key specifies the service on the node to connect(2)
     /// or bind(2) to. It may be a port number represented as an integer or
     /// a service name represented as a string ("ssh", "telnet", etc.)
-    sock_service_name: Option<StringOrInt>,
+    sock_service_name: Option<StringOrU32>,
 
     /// This optional key can be used to specifically request that "IPv4"
     /// or "IPv6" socket(s) be created. An additional option, "IPv4v6"

@@ -2,10 +2,10 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::common::{StringOrArrayOfStrings, StringOrInt};
 use crate::keep_alive::KeepAlive;
 use crate::mach_service::MachServiceConfig;
 use crate::socket::SocketValue;
+use crate::unions::{StringOrU32, StringOrVec};
 
 #[derive(Builder, Default, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
@@ -207,7 +207,7 @@ pub struct LaunchAgent {
     /// If a string that does not cleanly convert to an integer is specified, the
     /// behavior will be to set a umask(2) according to the strtoul(3) parsing
     /// rules.
-    umask: Option<StringOrInt>,
+    umask: Option<StringOrU32>,
 
     /// The recommended idle time out (in seconds) to pass to the job. This key
     /// never did anything interesting and is no longer implemented. Jobs seeking
@@ -411,7 +411,7 @@ pub struct LaunchAgent {
     /// the System Settings Login Items UI. If an app installs a legacy plist the
     /// plist should include this key with a value of the app's bundle
     /// identifier.
-    associated_bundle_identifiers: Option<StringOrArrayOfStrings>,
+    associated_bundle_identifiers: Option<StringOrVec>,
 }
 
 #[derive(Builder, Clone, Deserialize, Serialize)]

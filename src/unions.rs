@@ -1,19 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
-#[allow(dead_code)]
-pub enum StringOrInt {
+#[serde(untagged)]
+pub enum StringOrU32 {
     Integer(u32),
     String(String),
 }
 
 #[derive(Clone, Deserialize, Serialize)]
-pub enum StringOrArrayOfStrings {
+#[serde(untagged)]
+pub enum StringOrVec {
     String(String),
-    Array(Vec<String>),
-}
-
-pub fn default_false() -> bool {
-    false
+    Vec(Vec<String>),
 }
