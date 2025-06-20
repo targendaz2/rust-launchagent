@@ -1,6 +1,7 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
+/// Soft and/or hard resource limits to be imposed on a job.
 #[derive(Builder, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 #[builder(setter(into, strip_option))]
@@ -61,32 +62,41 @@ pub struct ResourceLimits {
     pub stack: Option<u32>,
 }
 
+/// The type of session a job may be run in.
 #[derive(Clone, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum SessionType {
     Single(String),
     Many(Vec<String>),
 }
 
+/// The intended purpose of a job.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum ProcessType {
     /// Background jobs are generally processes that do work that was not
-    /// directly requested by the user. The resource limits applied to
-    /// Background jobs are intended to prevent them from disrupting the
-    /// user experience.
+    /// directly requested by the user.
+    ///
+    /// The resource limits applied to Background jobs are intended to prevent
+    /// them from disrupting the user experience.
     Background,
 
-    /// Standard jobs are equivalent to no ProcessType being set.
+    /// Standard jobs are equivalent to no
+    /// [`process_type`](crate::launchagent::LaunchAgent::process_type) being
+    /// set.
     Standard,
 
-    /// Adaptive jobs move between the Background and Interactive
-    /// classifications based on activity over XPC connections. See
-    /// xpc_transaction_begin(3) for details.
+    /// Adaptive jobs move between the [`Background`](ProcessType::Background)
+    /// and [`Interactive`](ProcessType::Interactive) classifications based on
+    /// activity over XPC connections. See `xpc_transaction_begin(3)` for
+    /// details.
     Adaptive,
 
     /// Interactive jobs run with the same resource limitations as apps,
-    /// that is to say, none. Interactive jobs are critical to maintaining
-    /// a responsive user experience, and this key should only be used if
-    /// an app's ability to be responsive depends on it, and cannot be made
-    /// Adaptive.
+    /// that is to say, none.
+    ///
+    /// Interactive jobs are critical to maintaining a responsive user
+    /// experience, and this type should only be used if an app's ability to be
+    /// responsive depends on it, and cannot be made
+    /// [`Adaptive`](ProcessType::Adaptive).
     Interactive,
 }
