@@ -2,8 +2,13 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::calendar_interval::CalendarInterval;
+use crate::inet::InetdCompatibility;
 use crate::keep_alive::KeepAlive;
 use crate::mach_service::MachServiceConfig;
+use crate::processes::ProcessType;
+use crate::resource_limits::ResourceLimits;
+use crate::sessions::SessionType;
 use crate::socket::SocketValue;
 use crate::unions::{StringOrF32, StringOrVec};
 
@@ -41,11 +46,11 @@ pub struct LaunchAgent {
 
     /// This configuration file only applies to the hosts listed.
     #[deprecated(note = "This key is no longer supported.")]
-    limit_load_to_hosts: Option<Vec<String>>,
+    pub limit_load_to_hosts: Option<Vec<String>>,
 
     /// This configuration file only applies to hosts NOT listed.
     #[deprecated(note = "This key is no longer supported.")]
-    limit_load_from_hosts: Option<Vec<String>>,
+    pub limit_load_from_hosts: Option<Vec<String>>,
 
     /// This configuration file only applies to sessions of the type(s)
     /// specified.
@@ -144,11 +149,11 @@ pub struct LaunchAgent {
     #[deprecated(
         note = "This key should not be used. Please remove this key from your launchd.plist."
     )]
-    on_demand: Option<bool>,
+    pub on_demand: Option<bool>,
 
     #[deprecated(note = "Please remove this key from your launchd.plist.")]
     #[serde(rename = "ServiceIPC")]
-    service_ipc: Option<bool>,
+    pub service_ipc: Option<bool>,
 
     /// Whether your job is to be kept continuously running or to let demand
     /// and conditions control the invocation.
@@ -230,7 +235,7 @@ pub struct LaunchAgent {
     /// the system mechanism for reclaiming killable jobs under memory
     /// pressure.
     #[deprecated(note = "This key never did anything interesting and is no longer implemented.")]
-    time_out: Option<u32>,
+    pub time_out: Option<u32>,
 
     /// The amount of time `launchd` waits between sending the `SIGTERM` signal
     /// and before sending a `SIGKILL` signal when the job is to be stopped.
@@ -385,178 +390,73 @@ pub struct LaunchAgent {
     /// See `setiopolicy_np(3)`.
     pub materialized_dataless_files: Option<bool>,
 
-    /// Specifies whether the job can only be run once and only
-    /// once.  In other words, if the job cannot be safely respawned without a
-    /// full machine reboot, then set this key to be true.
-    launch_only_once: Option<bool>,
-
-    /// This optional key is used to specify Mach services to be registered with
-    /// the Mach bootstrap namespace. Each key in this dictionary should be the
-    /// name of a service to be advertised. The value of the key must be a
-    /// boolean and set to true or a dictionary in order for the service to be
-    /// advertised.
-    mach_services: Option<HashMap<String, MachServiceConfig>>,
-
-    /// This optional key is used to specify launch on demand sockets that can be
-    /// used to let launchd know when to run the job. The job must check-in to
-    /// get a copy of the file descriptors using the launch_activate_socket(3)
-    /// API.  The keys of the top level Sockets dictionary can be anything. These
-    /// keys are meant for the application developer to associate which socket
-    /// descriptors correspond to which application level protocols (e.g. http
-    /// vs. ftp vs. DNS...).
+    /// Whether the job can only be run once and only once.
     ///
-    /// The parameters below are used as inputs to call getaddrinfo(3).
-    sockets: Option<HashMap<String, SocketValue>>,
+    /// In other words, if the job cannot be safely respawned without a full
+    /// machine reboot, then set this to `true`.
+    pub launch_only_once: Option<bool>,
 
-    /// Specifies higher-level event types to be used as launch-on-demand event
-    /// sources.  Each sub-dictionary defines events for a particular event
-    /// subsystem, such as "com.apple.iokit.matching", which can be used to
-    /// launch jobs based on the appearance of nodes in the IORegistry. Each
-    /// dictionary within the sub-dictionary specifies an event descriptor that
-    /// is specified to each event subsystem. With this key, the job promises to
-    /// use the xpc_set_event_stream_handler(3) API to consume events. See
-    /// xpc_events(3) for more details on event sources.
-    launch_events: Option<HashMap<String, HashMap<String, HashMap<String, String>>>>,
+    /// Mach services to be registered with the Mach bootstrap namespace.
+    ///
+    /// Each key in this dictionary should be the name of a service to be
+    /// advertised. The value of the key must be a boolean and set to `true` or
+    /// a dictionary in order for the service to be advertised.
+    pub mach_services: Option<HashMap<String, MachServiceConfig>>,
 
-    /// This key was a hack for jobs which could not properly keep track of their
-    /// clients and is no longer implemented.
-    hopefully_exits_last: Option<String>,
+    /// Launch-on-demand sockets that can be used to let `launchd` know when to
+    /// run the job.
+    ///
+    /// The job must check-in to get a copy of the file descriptors using the
+    /// `launch_activate_socket(3)` API. The keys of the top level `Sockets`
+    /// dictionary can be anything. These keys are meant for the application
+    /// developer to associate which socket descriptors correspond to which
+    /// application level protocols (e.g. http vs. ftp vs. DNS...).
+    ///
+    /// The parameters are used as inputs to call `getaddrinfo(3)`.
+    pub sockets: Option<HashMap<String, SocketValue>>,
 
-    /// This key was a hack for jobs which could not properly keep track of their
-    /// clients and is no longer implemented.
-    hopefully_exits_first: Option<String>,
+    /// Higher-level event types to be used as launch-on-demand event sources.
+    ///
+    /// Each sub-dictionary defines events for a particular event subsystem,
+    /// such as "com.apple.iokit.matching", which can be used to launch jobs
+    /// based on the appearance of nodes in the IORegistry. Each dictionary
+    /// within the sub-dictionary specifies an event descriptor that is
+    /// specified to each event subsystem. With this key, the job promises to
+    /// use the `xpc_set_event_stream_handler(3)` API to consume events. See
+    /// `xpc_events(3)` for more details on event sources.
+    pub launch_events: Option<HashMap<String, HashMap<String, HashMap<String, String>>>>,
 
-    /// This key specifies that the job should be spawned into a new security
-    /// audit session rather than the default session for the context is belongs
-    /// to. See auditon(2) for details.
-    session_create: Option<bool>,
+    #[deprecated(
+        note = "This was a hack for jobs which could not properly keep track of their clients and is no longer implemented."
+    )]
+    pub hopefully_exits_last: Option<String>,
 
-    /// This optional key controls the behavior of timers created by the job. By
-    /// default on OS X Mavericks version 10.9 and later, timers created by
-    /// launchd jobs are coalesced. Batching the firing of timers with similar
-    /// deadlines improves the overall energy efficiency of the system. If this
-    /// key is set to true, timers created by the job will opt into less
+    #[deprecated(
+        note = "This was a hack for jobs which could not properly keep track of their clients and is no longer implemented."
+    )]
+    pub hopefully_exits_first: Option<String>,
+
+    /// The job should be spawned into a new security audit session rather than
+    /// the default session for the context is belongs to.
+    ///
+    /// See `auditon(2)` for details.
+    pub session_create: Option<bool>,
+
+    /// Controls the behavior of timers created by the job.
+    ///
+    /// By default on OS X Mavericks version 10.9 and later, timers created by
+    /// `launchd` jobs are coalesced. Batching the firing of timers with
+    /// similar deadlines improves the overall energy efficiency of the system.
+    /// If this is set to `true`, timers created by the job will opt into less
     /// efficient but more precise behavior and not be coalesced with other
-    /// timers. This key may have no effect if the job's ProcessType is not set
-    /// to Interactive.
-    legacy_timers: Option<bool>,
+    /// timers. This may have no effect if [`process_type`](Self::process_type)
+    /// is not set to [`Interactive`](ProcessType::Interactive).
+    pub legacy_timers: Option<bool>,
 
-    /// This optional key indicates which bundles are associated with this job in
-    /// the System Settings Login Items UI. If an app installs a legacy plist the
-    /// plist should include this key with a value of the app's bundle
-    /// identifier.
-    associated_bundle_identifiers: Option<StringOrVec>,
-}
-
-#[derive(Builder, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
-#[builder(setter(into, strip_option))]
-pub struct InetdCompatibility {
-    ///  This flag corresponds to the "wait" or "nowait" option of inetd. If
-    /// true, then the listening socket is passed via the stdio(3) file
-    /// descriptors. If false, then accept(2) is called on behalf of the
-    /// job, and the result is passed via the stdio(3) descriptors.
-    wait: Option<bool>,
-}
-
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
-pub enum SessionType {
-    Single(String),
-    Many(Vec<String>),
-}
-
-#[derive(Builder, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
-#[builder(setter(into, strip_option))]
-pub struct CalendarInterval {
-    /// The minute (0-59) on which this job will be run.
-    minute: Option<u32>,
-
-    /// The hour (0-23) on which this job will be run.
-    hour: Option<u32>,
-
-    /// The day of the month (1-31) on which this job will be run.
-    day: Option<u32>,
-
-    /// The weekday on which this job will be run (0 and 7 are Sunday). If
-    /// both Day and Weekday are specificed, then the job will be started
-    /// if either one matches the current date.
-    weekday: Option<u8>,
-
-    /// The month (1-12) on which this job will be run.
-    month: Option<u8>,
-}
-
-#[derive(Builder, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
-#[builder(setter(into, strip_option))]
-pub struct ResourceLimits {
-    /// The largest size (in bytes) core file that may be created.
-    core: Option<u32>,
-
-    /// The maximum amount of cpu time (in seconds) to be used by each
-    /// process.
-    #[serde(rename = "CPU")]
-    cpu: Option<u32>,
-
-    /// The maximum size (in bytes) of the data segment for a process; this
-    /// defines how far a program may extend its break with the sbrk(2)
-    /// system call.
-    data: Option<u32>,
-
-    /// The largest size (in bytes) file that may be created.
-    file_size: Option<u32>,
-
-    /// The maximum size (in bytes) which a process may lock into memory
-    /// using the mlock(2) function.
-    memory_lock: Option<u32>,
-
-    /// The maximum number of open files for this process.  Setting this
-    /// value in a system wide daemon will set the sysctl(3) kern.maxfiles
-    /// (SoftResourceLimits) or kern.maxfilesperproc (HardResourceLimits)
-    /// value in addition to the setrlimit(2) values.
-    number_of_files: Option<u32>,
-
-    /// The maximum number of simultaneous processes for this UID. Setting
-    /// this value in a system wide daemon will set the sysctl(3)
-    /// kern.maxproc (SoftResourceLimits) or kern.maxprocperuid
-    /// (HardResourceLimits) value in addition to the setrlimit(2) values.
-    number_of_processes: Option<u32>,
-
-    /// The maximum size (in bytes) to which a process's resident set size
-    /// may grow.  This imposes a limit on the amount of physical memory to
-    /// be given to a process; if memory is tight, the system will prefer
-    /// to take memory from processes that are exceeding their declared
-    /// resident set size.
-    resident_set_size: Option<u32>,
-
-    /// The maximum size (in bytes) of the stack segment for a process;
-    /// this defines how far a program's stack segment may be extended.
-    /// Stack extension is performed automatically by the system.
-    stack: Option<u32>,
-}
-
-#[derive(Clone, Deserialize, Serialize)]
-pub enum ProcessType {
-    /// Background jobs are generally processes that do work that was not
-    /// directly requested by the user. The resource limits applied to
-    /// Background jobs are intended to prevent them from disrupting the
-    /// user experience.
-    Background,
-
-    /// Standard jobs are equivalent to no ProcessType being set.
-    Standard,
-
-    /// Adaptive jobs move between the Background and Interactive
-    /// classifications based on activity over XPC connections. See
-    /// xpc_transaction_begin(3) for details.
-    Adaptive,
-
-    /// Interactive jobs run with the same resource limitations as apps,
-    /// that is to say, none. Interactive jobs are critical to maintaining
-    /// a responsive user experience, and this key should only be used if
-    /// an app's ability to be responsive depends on it, and cannot be made
-    /// Adaptive.
-    Interactive,
+    /// Which bundles are associated with this job in the System Settings Login
+    /// Items UI.
+    ///
+    /// If an app installs a legacy plist the plist should include this with a
+    /// value of the app's bundle identifier.
+    pub associated_bundle_identifiers: Option<StringOrVec>,
 }
