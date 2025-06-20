@@ -3,5 +3,7 @@
     "tamasfe.even-better-toml",
     "rust-lang.rust-analyzer",
     "davidanson.vscode-markdownlint",
+    "task.vscode-task",
+    "redhat.vscode-yaml",
   ]
 }
