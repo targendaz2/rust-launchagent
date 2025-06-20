@@ -67,7 +67,8 @@ pub enum SocketValue {
 #[builder(setter(into, strip_option))]
 pub struct Socket {
     /// What type of socket to create.
-    pub sock_type: Option<SocketType>,
+    #[serde(rename = "SockType")]
+    pub socket_type: Option<SocketType>,
 
     /// Whether `listen(2)` or `connect(2)` should be called on the created
     /// file descriptor.
@@ -144,6 +145,7 @@ pub struct Socket {
     pub multicast_group: Option<String>,
 }
 
+/// The type of socket to create.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum SocketType {
     Stream,
@@ -151,6 +153,7 @@ pub enum SocketType {
     Seqpacket,
 }
 
+/// The family of socket to create.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum SocketFamily {
     IPv4,
@@ -159,6 +162,7 @@ pub enum SocketFamily {
     Unix,
 }
 
+/// The protocol to use for the socket.
 #[derive(Clone, Deserialize, Serialize)]
 pub enum SocketProtocol {
     TCP,
