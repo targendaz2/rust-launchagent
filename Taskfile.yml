@@ -1,0 +1,7 @@
+version: "3"
+
+tasks:
+  doc:
+    desc: "Generate documentation"
+    cmds:
+      - cargo doc --lib --document-private-items
