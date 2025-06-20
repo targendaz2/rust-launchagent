@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Clone, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
 pub enum KeepAlive {
     Bool(bool),
+    #[serde(rename_all = "PascalCase")]
     Object {
         /// If true, the job will be restarted as long as the program exits and
         /// with an exit status of zero.  If false, the job will be restarted

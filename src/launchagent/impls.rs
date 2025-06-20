@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::launchagent::{LaunchAgent, LaunchAgentBuilder};
+use super::structs::{LaunchAgent, LaunchAgentBuilder};
 
 impl LaunchAgent {
     pub fn new(label: String, program: &str) -> Self {
