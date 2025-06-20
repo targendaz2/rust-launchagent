@@ -3,9 +3,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{defaults::default_false, unions::StringOrU32};
 
-#[derive(Builder, Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
-#[builder(setter(into, strip_option))]
 pub struct InetdCompatibility {
     /// Corresponds to the "wait" or "nowait" option of `inetd`.
     ///

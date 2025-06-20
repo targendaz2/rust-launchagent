@@ -1,2 +1,4 @@
 mod impls;
-pub mod structs;
+mod structs;
+
+pub use structs::{LaunchAgent, LaunchAgentBuilder};
