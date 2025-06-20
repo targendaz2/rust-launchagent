@@ -2,9 +2,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(untagged)]
-pub enum StringOrU32 {
-    Integer(u32),
+pub enum StringOrF32 {
     String(String),
+    Integer(f32),
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum StringOrU32 {
+    String(String),
+    Integer(u32),
 }
 
 #[derive(Clone, Deserialize, Serialize)]

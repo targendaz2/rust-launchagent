@@ -5,13 +5,13 @@ use std::collections::HashMap;
 use crate::keep_alive::KeepAlive;
 use crate::mach_service::MachServiceConfig;
 use crate::socket::SocketValue;
-use crate::unions::{StringOrU32, StringOrVec};
+use crate::unions::{StringOrF32, StringOrVec};
 
 #[derive(Builder, Default, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 #[builder(default, setter(into, strip_option))]
 pub struct LaunchAgent {
-    /// Uniquely identifies the job to launchd.
+    /// Uniquely identifies the job to `launchd`.
     pub label: String,
 
     /// Whether the job should be loaded by default.
@@ -39,11 +39,11 @@ pub struct LaunchAgent {
     /// <div class="warning">For new projects, this key should be avoided.</div>
     pub inetd_compatibility: Option<InetdCompatibility>,
 
-    /// This configuration file only applies to the hosts listed with this key.
+    /// This configuration file only applies to the hosts listed.
     #[deprecated(note = "This key is no longer supported.")]
     limit_load_to_hosts: Option<Vec<String>>,
 
-    /// This configuration file only applies to hosts NOT listed with this key.
+    /// This configuration file only applies to hosts NOT listed.
     #[deprecated(note = "This key is no longer supported.")]
     limit_load_from_hosts: Option<Vec<String>>,
 
@@ -54,8 +54,7 @@ pub struct LaunchAgent {
     /// distinct sessions in the privileged system context.
     pub limit_load_to_session_type: Option<SessionType>,
 
-    /// This configuration file only applies to the hardware listed with this
-    /// key.
+    /// This configuration file only applies to the hardware listed.
     ///
     /// Each key in the dictionary defines a subdomain of the "hw" sysctl(3)
     /// domain. Each value of the key defines valid values for the job to load.
@@ -63,8 +62,7 @@ pub struct LaunchAgent {
     /// only load on a machine whose "hw.model" value was "MacBookPro4,2".
     pub limit_load_to_hardware: Option<HashMap<String, Vec<String>>>,
 
-    /// This configuration file only applies to the hardware NOT listed with this
-    /// key.
+    /// This configuration file only applies to the hardware NOT listed.
     ///
     /// Each key in the dictionary defines a subdomain of the "hw"
     /// sysctl(3) domain. Each value of the key defines values where the job will
@@ -76,13 +74,15 @@ pub struct LaunchAgent {
     /// Maps to the first argument of `execv(3)` and indicates the
     /// absolute path to the executable for the job.
     ///
-    /// If missing, then
-    /// the first element of the array of strings provided to the
-    /// [`program_arguments`](Self::program_arguments) will be used instead. This key is required in the
-    /// absence of the [`program_arguments`](Self::program_arguments) and [`bundle_program`](Self::bundle_program) keys.
+    /// If missing, then the first element of the array of strings provided to
+    /// [`program_arguments`](Self::program_arguments) will be used instead.
+    /// Required in the absence of
+    /// [`program_arguments`](Self::program_arguments) and
+    /// [`bundle_program`](Self::bundle_program).
     ///
-    /// **Note:** The [`program`](Self::program) key must be an absolute path. Previous versions of
-    /// `launchd` did not enforce this requirement but failed to run the job.
+    /// NOTE: [`program`](Self::program) must be an absolute path. Previous
+    /// versions of `launchd` did not enforce this requirement but failed to
+    /// run the job.
     pub program: Option<String>,
 
     /// Maps to the first argument of `execv(3)` and is an app-bundle
@@ -91,76 +91,89 @@ pub struct LaunchAgent {
     /// Only supported for plists that are installed using `SMAppService`.
     pub bundle_program: Option<String>,
 
-    /// This key maps to the second argument of execvp(3) and specifies the
-    /// argument vector to be passed to the job when a process is spawned. This
-    /// key is required in the absence of the Program key.  IMPORTANT: Many
-    /// people are confused by this key. Please read execvp(3) very carefully!
-    /// NOTE: In the absence of the Program key, the first element of the
-    /// ProgramArguments array may be either an absolute path, or a relative
-    /// path which is resolved using _PATH_STDPATH.
+    /// Maps to the second argument of `execvp(3)` and specifies the
+    /// argument vector to be passed to the job when a process is spawned.
+    /// Required in the absence of [`program`](Self::program).
+    ///
+    /// IMPORTANT: Many people are confused by this key. Please read
+    /// `execvp(3)` very carefully!
+    ///
+    /// NOTE: In the absence of [`program`](Self::program), the first
+    /// element of [`program_arguments`](Self::program_arguments) may be either
+    /// an absolute path, or a relative path which is resolved using
+    /// `_PATH_STDPATH`.
     #[builder(setter(each(name = "program_argument", into)))]
     pub program_arguments: Option<Vec<String>>,
 
-    /// This flag causes launchd to use the glob(3) mechanism to update the
+    /// Causes `launchd` to use the `glob(3)` mechanism to update the
     /// program arguments before invocation.
-    enable_globbing: Option<bool>,
+    pub enable_globbing: Option<bool>,
 
-    /// This key instructs launchd that the job uses xpc_transaction_begin(3) and
-    /// xpc_transaction_end(3) to track outstanding transactions. When a process
-    /// has an outstanding transaction, it is considered active, otherwise
-    /// inactive. A transaction is automatically created when an XPC message
-    /// expecting a reply is received, until the reply is sent or the request
-    /// message is discarded. When launchd stops an active process, it sends
-    /// SIGTERM first, and then SIGKILL after a reasonable timeout. If the
-    /// process is inactive, SIGKILL is sent immediately.
-    enable_transactions: Option<bool>,
-
-    /// This key opts the job into the system's Pressured Exit facility. Use of
-    /// this key implies EnableTransactions , and also lets the system consider
-    /// process eligible for reclamation under memory pressure when it's
-    /// inactive. See xpc_main(3) for details. Jobs that opt into Pressured Exit
-    /// will be automatically relaunched if they exit or crash while holding open
-    /// transactions.
+    /// Instructs `launchd` that the job uses `xpc_transaction_begin(3)` and
+    /// `xpc_transaction_end(3)` to track outstanding transactions.
     ///
-    /// NOTE: launchd(8) does not respect EnablePressuredExit for jobs that have
-    /// KeepAlive set to true.
-    ///
-    /// IMPORTANT: Jobs which opt into Pressured Exit will ignore SIGTERM rather
-    /// than exiting by default, so a dispatch(3) source must be used when
-    /// handling this signal.
-    enable_pressured_exit: Option<bool>,
+    /// When a process has an outstanding transaction, it is considered active,
+    /// otherwise inactive. A transaction is automatically created when an XPC
+    /// message expecting a reply is received, until the reply is sent or the
+    /// request message is discarded. When `launchd` stops an active process,
+    /// it sends `SIGTERM` first, and then `SIGKILL` after a reasonable
+    /// timeout. If the process is inactive, `SIGKILL` is sent immediately.
+    pub enable_transactions: Option<bool>,
 
-    /// This key does nothing if set to true. If set to false, this key is
-    /// equivalent to specifying a true value for the KeepAlive key. This key
-    /// should not be used. Please remove this key from your launchd.plist.
+    /// Opts the job into the system's Pressured Exit facility.
+    ///
+    /// Use of this key implies
+    /// [`enable_transactions`](Self::enable_transactions) , and also lets the
+    /// system consider the process eligible for reclamation under memory
+    /// pressure when it's inactive. See `xpc_main(3)` for details. Jobs that
+    /// opt into Pressured Exit will be automatically relaunched if they exit
+    /// or crash while holding open transactions.
+    ///
+    /// NOTE: `launchd(8)` does not respect
+    /// [`enable_pressured_exit`](Self::enable_pressured_exit) for jobs that
+    /// have [`keep_alive`](Self::keep_alive) set to `true`.
+    ///
+    /// IMPORTANT: Jobs which opt into Pressured Exit will ignore `SIGTERM`
+    /// rather than exiting by default, so a `dispatch(3)` source must be used
+    /// when handling this signal.
+    pub enable_pressured_exit: Option<bool>,
+
+    /// Does nothing if set to `true`. If set to `false`, this is
+    /// equivalent to specifying a `true` value for
+    /// [`keep_alive`](Self::keep_alive).
+    #[deprecated(
+        note = "This key should not be used. Please remove this key from your launchd.plist."
+    )]
     on_demand: Option<bool>,
 
-    /// Please remove this key from your launchd.plist.
+    #[deprecated(note = "Please remove this key from your launchd.plist.")]
     #[serde(rename = "ServiceIPC")]
     service_ipc: Option<bool>,
 
-    /// This optional key is used to control whether your job is to be kept
-    /// continuously running or to let demand and conditions control the
-    /// invocation. The default is false and therefore only demand will start the
-    /// job. The value may be set to true to unconditionally keep the job alive.
-    /// Alternatively, a dictionary of conditions may be specified to selectively
-    /// control whether launchd keeps a job alive or not. If multiple keys are
-    /// provided, launchd ORs them, thus providing maximum flexibility to the job
-    /// to refine the logic and stall if necessary. If launchd finds no reason to
-    /// restart the job, it falls back on demand based invocation.  Jobs that
-    /// exit quickly and frequently when configured to be kept alive will be
-    /// throttled to conserve system resources. The use of this key implicitly
-    /// implies RunAtLoad, causing launchd to speculatively launch the job.
-    keep_alive: Option<KeepAlive>,
+    /// Whether your job is to be kept continuously running or to let demand
+    /// and conditions control the invocation.
+    ///
+    /// The default is `false` and therefore only demand will start the job.
+    /// The value may be set to `true` to unconditionally keep the job alive.
+    /// Alternatively, a dictionary of conditions may be specified to
+    /// selectively control whether `launchd` keeps a job alive or not. If
+    /// multiple keys are provided, `launchd` ORs them, thus providing maximum
+    /// flexibility to the job to refine the logic and stall if necessary. If
+    /// `launchd` finds no reason to restart the job, it falls back on demand
+    /// based invocation.  Jobs that exit quickly and frequently when
+    /// configured to be kept alive will be throttled to conserve system
+    /// resources. The use of this key implicitly implies
+    /// [`run_at_load`](Self::run_at_load), causing `launchd` to speculatively
+    /// launch the job.
+    pub keep_alive: Option<KeepAlive>,
 
-    /// This optional key is used to control whether your job is launched once at
-    /// the time the job is loaded. The default is false. This key should be
-    /// avoided, as speculative job launches have an adverse effect on system-
-    /// boot and user-login scenarios.
-    run_at_load: Option<bool>,
+    /// Whether your job is launched once at the time the job is loaded. The
+    /// default is `false`.
+    ///
+    /// <div class="warning">This key should be avoided, as speculative job launches have an adverse effect on system-boot and user-login scenarios.</div>
+    pub run_at_load: Option<bool>,
 
-    /// This optional key is used to specify a directory to chroot(2) to before
-    /// running the job.
+    /// A directory to `chroot(2)` to before running the job.
     ///
     /// IMPORTANT: iOS and OS X both make significant use of IPC to implement
     /// features. The details of the communication between a client and server
@@ -169,189 +182,210 @@ pub struct LaunchAgent {
     /// is not aware of any IPC that is happening.
     ///
     /// So unless the library stack which exists in the jail specified by this
-    /// key or a call to chroot(2) is identical to the one shipping on the
+    /// key or a call to `chroot(2)` is identical to the one shipping on the
     /// system, there is no guarantee that a process running in that jail will
     /// know how to communicate with the daemons on the system. Mismatches in the
     /// library stack between the jail and the system can manifest as random
     /// failures, hangs and crashes.
     ///
-    /// For these reasons, it is highly recommended that you avoid making use of
-    /// this key unless you have taken special precautions to ensure that the job
-    /// in question never attempts any IPC by setting the XPC_NULL_BOOTSTRAP
-    /// environment variable to a value of "1". Note that even if you have done
-    /// this, you must also take special care to propagate this environment
-    /// variable to any child processes your job may spawn through fork(2) or
-    /// posix_spawn(2).  And even if you have done that, there is no guarantee
-    /// that any subprocesses spawned by your child processes will take care to
-    /// do the same thing unless you completely control all possible chains of
-    /// execution, which is unlikely.
-    root_directory: Option<String>,
+    /// For these reasons, it is highly recommended that you avoid making use
+    /// of this key unless you have taken special precautions to ensure that
+    /// the job in question never attempts any IPC by setting the
+    /// `XPC_NULL_BOOTSTRAP` environment variable to a value of "1". Note that
+    /// even if you have done this, you must also take special care to
+    /// propagate this environment  variable to any child processes your job
+    /// may spawn through `fork(2)` or `posix_spawn(2)`.  And even if you have
+    /// done that, there is no guarantee that any subprocesses spawned by your
+    /// child processes will take care to do the same thing unless you
+    /// completely control all possible chains of execution, which is unlikely.
+    pub root_directory: Option<String>,
 
-    /// This optional key is used to specify a directory to chdir(2) to before
-    /// running the job.
-    working_directory: Option<String>,
+    /// A directory to `chdir(2)` to before running the job.
+    pub working_directory: Option<String>,
 
-    /// This optional key is used to specify additional environmental variables
-    /// to be set before running the job. Each key in the dictionary is the name
-    /// of an environment variable, with the corresponding value being a string
-    /// representing the desired value.  NOTE: Values other than strings will be
-    /// ignored.
-    environment_variables: Option<HashMap<String, String>>,
+    /// Additional environmental variables to be set before running the job.
+    ///
+    /// Each key in the dictionary is the name of an environment variable, with
+    /// the corresponding value being a string representing the desired value.
+    ///
+    /// NOTE: Values other than strings will be ignored.
+    pub environment_variables: Option<HashMap<String, String>>,
 
-    /// This optional key specifies what value should be passed to umask(2)
-    /// before running the job. If the value specified is an integer, it must be
-    /// a decimal representation of the desired umask, as property lists do not
-    /// support encoding integers in octal. If a string is given, the string will
-    /// be converted into an integer as per the rules described in strtoul(3),
+    /// What value should be passed to `umask(2)` before running the job.
+    ///
+    /// If the value specified is an integer, it must be a decimal
+    /// representation of the desired umask, as property lists do not support
+    /// encoding integers in octal. If a string is given, the string will be
+    /// converted into an integer as per the rules described in `strtoul(3)`,
     /// and an octal value may be specified by prefixing the string with a '0'.
-    /// If a string that does not cleanly convert to an integer is specified, the
-    /// behavior will be to set a umask(2) according to the strtoul(3) parsing
-    /// rules.
-    umask: Option<StringOrU32>,
+    /// If a string that does not cleanly convert to an integer is specified,
+    /// the behavior will be to set a `umask(2)` according to the `strtoul(3)`
+    /// parsing rules.
+    pub umask: Option<StringOrF32>,
 
-    /// The recommended idle time out (in seconds) to pass to the job. This key
-    /// never did anything interesting and is no longer implemented. Jobs seeking
-    /// to exit when idle should use the EnablePressuredExit key to opt into the
-    /// system mechanism for reclaiming killable jobs under memory pressure.
+    /// The recommended idle time out (in seconds) to pass to the job.
+    ///
+    /// Jobs seeking to exit when idle should use the
+    /// [`enable_pressured_exit`](Self::enable_pressured_exit) key to opt into
+    /// the system mechanism for reclaiming killable jobs under memory
+    /// pressure.
+    #[deprecated(note = "This key never did anything interesting and is no longer implemented.")]
     time_out: Option<u32>,
 
-    /// The amount of time launchd waits between sending the SIGTERM signal and
-    /// before sending a SIGKILL signal when the job is to be stopped. The
-    /// default value is system-defined. The value zero is interpreted as
-    /// infinity and should not be used, as it can stall system shutdown forever.
-    exit_time_out: Option<u32>,
-
-    ///  This key lets one override the default throttling policy imposed on jobs
-    /// by launchd.  The value is in seconds, and by default, jobs will not be
-    /// spawned more than once every 10 seconds. The principle behind this is
-    /// that jobs should linger around just in case they are needed again in the
-    /// near future. This not only reduces the latency of responses, but it
-    /// encourages developers to amortize the cost of program invocation.
-    throttle_interval: Option<u32>,
-
-    /// This optional key specifies whether initgroups(3) to initialize the group
-    /// list for the job. The default is true. This key will be ignored if the
-    /// UserName key is not set. Note that for agents, the UserName key is
-    /// ignored.
-    init_groups: Option<bool>,
-
-    /// This optional key causes the job to be started if any one of the listed
-    /// paths are modified.
+    /// The amount of time `launchd` waits between sending the `SIGTERM` signal
+    /// and before sending a `SIGKILL` signal when the job is to be stopped.
     ///
-    /// IMPORTANT: Use of this key is highly discouraged, as filesystem event
-    /// monitoring is highly race-prone, and it is entirely possible for
-    /// modifications to be missed. When modifications are caught, there is no
-    /// guarantee that the file will be in a consistent state when the job is
-    /// launched.
-    watch_paths: Option<Vec<String>>,
+    /// The default value is system-defined. The value zero is interpreted as
+    /// infinity and should not be used, as it can stall system shutdown
+    /// forever.
+    pub exit_time_out: Option<u32>,
 
-    /// This optional key keeps the job alive as long as the directory or
-    /// directories specified are not empty.
-    queue_directories: Option<Vec<String>>,
+    /// Lets one override the default throttling policy imposed on jobs by
+    /// `launchd`.
+    ///
+    /// The value is in seconds, and by default, jobs will not be
+    /// spawned more than once every 10 seconds. The principle behind this is
+    /// that jobs should linger around just in case they are needed again in
+    /// the near future. This not only reduces the latency of responses, but it
+    /// encourages developers to amortize the cost of program invocation.
+    pub throttle_interval: Option<u32>,
 
-    /// This optional key causes the job to be started every time a filesystem is
-    /// mounted.
-    start_on_mount: Option<bool>,
+    /// Whether `initgroups(3)` should initialize the group list for the job.
+    ///
+    /// The default is `true`. It will be ignored if
+    /// [`user_name`](Self::user_name) is not set. Note that for agents,
+    /// [`user_name`](Self::user_name) is ignored.
+    pub init_groups: Option<bool>,
 
-    /// This optional key causes the job to be started every N seconds. If the
-    /// system is asleep during the time of the next scheduled interval firing,
-    /// that interval will be missed due to shortcomings in kqueue(3).  If the
-    /// job is running during an interval firing, that interval firing will
-    /// likewise be missed.
-    start_interval: Option<u32>,
+    /// Causes the job to be started if any one of the listed paths are
+    /// modified.
+    ///
+    /// <div class="warning">
+    ///     Use of this key is highly discouraged, as filesystem event
+    ///     monitoring is highly race-prone, and it is entirely possible for
+    ///     modifications to be missed. When modifications are caught, there is no
+    ///     guarantee that the file will be in a consistent state when the job is
+    ///     launched.
+    /// </div>
+    pub watch_paths: Option<Vec<String>>,
 
-    /// This optional key causes the job to be started every calendar interval as
-    /// specified. Missing arguments are considered to be wildcard. The semantics
-    /// are similar to crontab(5) in how firing dates are specified. Multiple
+    /// Keeps the job alive as long as the directory or directories specified
+    /// are not empty.
+    pub queue_directories: Option<Vec<String>>,
+
+    /// Causes the job to be started every time a filesystem is mounted.
+    pub start_on_mount: Option<bool>,
+
+    /// Causes the job to be started every N seconds.
+    ///
+    /// If the system is asleep during the time of the next scheduled interval
+    /// firing, that interval will be missed due to shortcomings in
+    /// `kqueue(3)`. If the job is running during an interval firing, that
+    /// interval firing will likewise be missed.
+    pub start_interval: Option<u32>,
+
+    /// Causes the job to be started every calendar interval as specified.
+    ///
+    /// Missing arguments are considered to be wildcard. The semantics are
+    /// similar to `crontab(5)` in how firing dates are specified. Multiple
     /// dictionaries may be specified in an array to schedule multiple calendar
     /// intervals.
     ///
-    /// Unlike cron which skips job invocations when the computer is asleep,
-    /// launchd will start the job the next time the computer wakes up.  If
+    /// Unlike `cron` which skips job invocations when the computer is asleep,
+    /// `launchd` will start the job the next time the computer wakes up.  If
     /// multiple intervals transpire before the computer is woken, those events
     /// will be coalesced into one event upon wake from sleep.
     ///
-    /// Note that StartInterval and StartCalendarInterval are not aware of each
-    /// other. They are evaluated completely independently by the system.
-    start_calendar_interval: Option<Vec<CalendarInterval>>,
+    /// Note that [`start_interval`](Self::start_interval) and
+    /// [`start_calendar_interval`](Self::start_calendar_interval) are not
+    /// aware of each other. They are evaluated completely independently by the
+    /// system.
+    pub start_calendar_interval: Option<Vec<CalendarInterval>>,
 
-    ///  This optional key specifies that the given path should be mapped to the
-    /// job's stdin(4), and that the contents of that file will be readable from
-    /// the job's stdin(4).  If the file does not exist, no data will be
-    /// delivered to the process' stdin(4).
-    standard_in_path: Option<String>,
+    /// The given path should be mapped to the job's `stdin(4)`, and the
+    /// contents of that file will be readable from the job's `stdin(4)`.
+    ///
+    /// If the file does not exist, no data will be delivered to the process'
+    /// `stdin(4)`.
+    pub standard_in_path: Option<String>,
 
-    /// This optional key specifies that the given path should be mapped to the
-    /// job's stdout(4), and that any writes to the job's stdout(4) will go to
-    /// the given file. If the file does not exist, it will be created with
-    /// writable permissions and ownership reflecting the user and/or group
-    /// specified as the UserName and/or GroupName, respectively (if set) and
-    /// permissions reflecting the umask(2) specified by the Umask key, if set.
-    standard_out_path: Option<String>,
+    /// The given path should be mapped to the job's `stdout(4)`, and any
+    /// writes to the job's `stdout(4)` will go to the given file.
+    ///
+    /// If the file does not exist, it will be created with writable
+    /// permissions and ownership reflecting the user and/or group specified as
+    /// [`user_name`](Self::user_name) and/or [`group_name`](Self::group_name),
+    /// respectively (if set) and permissions reflecting the `umask(2)`
+    /// specified by [`umask`](Self::umask), if set.
+    pub standard_out_path: Option<String>,
 
-    /// This optional key specifies that the given path should be mapped to the
-    /// job's stderr(4), and that any writes to the job's stderr(4) will go to
-    /// the given file. Note that this file is opened as readable and writable as
-    /// mandated by the POSIX specification for unclear reasons.  If the file
-    /// does not exist, it will be created with ownership reflecting the user
-    /// and/or group specified as the UserName and/or GroupName, respectively (if
-    /// set) and permissions reflecting the umask(2) specified by the Umask key,
-    /// if set.
-    standard_error_path: Option<String>,
+    /// The given path should be mapped to the job's `stderr(4)`, and any
+    /// writes to the job's `stderr(4)` will go to the given file.
+    ///
+    /// Note that this file is opened as readable and writable as mandated by
+    /// the POSIX specification for unclear reasons. If the file does not
+    /// exist, it will be created with ownership reflecting the user and/or
+    /// group specified as [`user_name`](Self::user_name) and/or
+    /// [`group_name`](Self::group_name), respectively (if set) and permissions
+    /// reflecting the `umask(2)` specified by [`umask`](Self::umask), if set.
+    pub standard_error_path: Option<String>,
 
-    /// This optional key specifies that launchd should adjust its log mask
-    /// temporarily to LOG_DEBUG while dealing with this job.
-    debug: Option<bool>,
+    /// `launchd` should adjust its log mask temporarily to `LOG_DEBUG` while
+    /// dealing with this job.
+    pub debug: Option<bool>,
 
-    /// This optional key specifies that launchd should launch the job in a
-    /// suspended state so that a debugger can be attached to the process as
-    /// early as possible (at the first instruction).
-    wait_for_debugger: Option<bool>,
+    /// `launchd` should launch the job in a suspended state so that a debugger
+    /// can be attached to the process as early as possible (at the first
+    /// instruction).
+    pub wait_for_debugger: Option<bool>,
 
     /// Resource limits to be imposed on the job. These adjust variables set with
-    /// setrlimit(2).
-    soft_resource_limits: Option<ResourceLimits>,
+    /// `setrlimit(2)`.
+    pub soft_resource_limits: Option<ResourceLimits>,
 
     /// Resource limits to be imposed on the job. These adjust variables set with
-    /// setrlimit(2).
-    hard_resource_limits: Option<ResourceLimits>,
+    /// `setrlimit(2)`.
+    pub hard_resource_limits: Option<ResourceLimits>,
 
-    /// This optional key specifies what nice(3) value should be applied to the
-    /// daemon.
-    nice: Option<i8>,
+    /// What `nice(3)` value should be applied to the daemon.
+    pub nice: Option<i8>,
 
-    /// This optional key describes, at a high level, the intended purpose of the
-    /// job.  The system will apply resource limits based on what kind of job it
-    /// is. If left unspecified, the system will apply light resource limits to
-    /// the job, throttling its CPU usage and I/O bandwidth. This classification
-    /// is preferable to using the HardResourceLimits, SoftResourceLimits and
-    /// Nice keys.
-    process_type: Option<ProcessType>,
+    /// Describes, at a high level, the intended purpose of the job.
+    ///
+    /// The system will apply resource limits based on what kind of job it is.
+    /// If left unspecified, the system will apply light resource limits to the
+    /// job, throttling its CPU usage and I/O bandwidth. This classification
+    /// is preferable to using
+    /// [`hard_resource_limits`](Self::hard_resource_limits),
+    /// [`soft_resource_limits`](Self::soft_resource_limits) and
+    /// [`nice`](Self::nice).
+    pub process_type: Option<ProcessType>,
 
-    /// When a job dies, launchd kills any remaining processes with the same
-    /// process group ID as the job. Setting this key to true disables that
+    /// When a job dies, `launchd` kills any remaining processes with the same
+    /// process group ID as the job. Setting this to `true` disables that
     /// behavior.
-    abandon_process_group: Option<bool>,
+    pub abandon_process_group: Option<bool>,
 
-    /// This optional key specifies whether the kernel should consider this
-    /// daemon to be low priority when doing filesystem I/O.
+    /// Whether the kernel should consider this daemon to be low priority when
+    /// doing filesystem I/O.
     #[serde(rename = "LowPriorityIO")]
-    low_priority_io: Option<bool>,
+    pub low_priority_io: Option<bool>,
 
-    /// This optional key specifies whether the kernel should consider this
-    /// daemon to be low priority when doing filesystem I/O when the process is
-    /// throttled with the Darwin-background classification.
+    /// Whether the kernel should consider this daemon to be low priority when
+    /// doing filesystem I/O when the process is throttled with the
+    /// Darwin-background classification.
     #[serde(rename = "LowPriorityBackgroundIO")]
-    low_priority_background_io: Option<bool>,
+    pub low_priority_background_io: Option<bool>,
 
-    /// This optional key specifies the dataless file materialization policy.
-    /// Setting this key to true causes dataless files to be materialized.
-    /// Setting this key to false causes dataless files to not be materialized.
-    /// If this key is not set, the default system policy for dataless files will
-    /// be used.  See setiopolicy_np(3)
-    materialized_dataless_files: Option<bool>,
+    /// The dataless file materialization policy.
+    ///
+    /// Setting this to `true` causes dataless files to be materialized.
+    /// Setting this to `false` causes dataless files to not be materialized.
+    /// If not set, the default system policy for dataless files will be used.
+    /// See `setiopolicy_np(3)`.
+    pub materialized_dataless_files: Option<bool>,
 
-    /// This optional key specifies whether the job can only be run once and only
+    /// Specifies whether the job can only be run once and only
     /// once.  In other words, if the job cannot be safely respawned without a
     /// full machine reboot, then set this key to be true.
     launch_only_once: Option<bool>,
@@ -435,7 +469,7 @@ pub enum SessionType {
 #[derive(Builder, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 #[builder(setter(into, strip_option))]
-struct CalendarInterval {
+pub struct CalendarInterval {
     /// The minute (0-59) on which this job will be run.
     minute: Option<u32>,
 
@@ -457,7 +491,7 @@ struct CalendarInterval {
 #[derive(Builder, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 #[builder(setter(into, strip_option))]
-struct ResourceLimits {
+pub struct ResourceLimits {
     /// The largest size (in bytes) core file that may be created.
     core: Option<u32>,
 
@@ -504,9 +538,7 @@ struct ResourceLimits {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
-#[allow(dead_code)]
-enum ProcessType {
+pub enum ProcessType {
     /// Background jobs are generally processes that do work that was not
     /// directly requested by the user. The resource limits applied to
     /// Background jobs are intended to prevent them from disrupting the
