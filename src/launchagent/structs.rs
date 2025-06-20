@@ -10,6 +10,8 @@ use crate::{
     unions::{StringOrF32, StringOrVec},
 };
 
+/// Represents an XML property list that can be loaded into `launchd` with
+/// `launchctl`.
 #[derive(Builder, Default, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 #[builder(default, setter(into, strip_option))]
