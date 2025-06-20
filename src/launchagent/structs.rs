@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::{
     constraints::{ProcessType, ResourceLimits, SessionType},
-    ipc::{InetdCompatibility, MachServiceConfig, SocketValue},
+    ipc::{InetdCompatibility, MachService, SocketValue},
     keep_alive::KeepAlive,
     triggers::CalendarInterval,
     unions::{StringOrF32, StringOrVec},
@@ -401,7 +401,7 @@ pub struct LaunchAgent {
     /// Each key in this dictionary should be the name of a service to be
     /// advertised. The value of the key must be a boolean and set to `true` or
     /// a dictionary in order for the service to be advertised.
-    pub mach_services: Option<HashMap<String, MachServiceConfig>>,
+    pub mach_services: Option<HashMap<String, MachService>>,
 
     /// Launch-on-demand sockets that can be used to let `launchd` know when to
     /// run the job.

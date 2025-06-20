@@ -31,9 +31,9 @@ pub struct ResourceLimits {
     ///
     /// Setting this value in a system wide daemon will set the `sysctl(3)`
     /// `kern.maxfiles`
-    /// ([`soft_resource_limits`](crate::launchagent::LaunchAgent::soft_resource_limits))
+    /// ([`soft_resource_limits`](crate::LaunchAgent::soft_resource_limits))
     /// or `kern.maxfilesperproc`
-    /// ([`hard_resource_limits`](crate::launchagent::LaunchAgent::hard_resource_limits))
+    /// ([`hard_resource_limits`](crate::LaunchAgent::hard_resource_limits))
     /// value in addition to the `setrlimit(2)` values.
     pub number_of_files: Option<u32>,
 
@@ -41,9 +41,9 @@ pub struct ResourceLimits {
     ///
     /// Setting this value in a system wide daemon will set the `sysctl(3)`
     /// `kern.maxproc`
-    /// ([`soft_resource_limits`](crate::launchagent::LaunchAgent::soft_resource_limits))
+    /// ([`soft_resource_limits`](crate::LaunchAgent::soft_resource_limits))
     /// or `kern.maxprocperuid`
-    /// ([`hard_resource_limits`](crate::launchagent::LaunchAgent::hard_resource_limits))
+    /// ([`hard_resource_limits`](crate::LaunchAgent::hard_resource_limits))
     /// value in addition to the `setrlimit(2)` values.
     pub number_of_processes: Option<u32>,
 
@@ -81,7 +81,7 @@ pub enum ProcessType {
     Background,
 
     /// Standard jobs are equivalent to no
-    /// [`process_type`](crate::launchagent::LaunchAgent::process_type) being
+    /// [`process_type`](crate::LaunchAgent::process_type) being
     /// set.
     Standard,
 
