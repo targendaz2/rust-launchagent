@@ -5,3 +5,8 @@ tasks:
     desc: "Generate documentation"
     cmds:
       - cargo doc --lib
+
+  test:
+    desc: "Run tests"
+    cmds:
+      - cargo test
