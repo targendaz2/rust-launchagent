@@ -7,7 +7,7 @@ use std::{
 use super::structs::{LaunchAgent, LaunchAgentBuilder};
 
 impl LaunchAgent {
-    pub fn new(label: String, program: &str) -> Self {
+    pub fn new(label: &str, program: &str) -> Self {
         LaunchAgentBuilder::default()
             .label(label)
             .program(program)
@@ -15,7 +15,7 @@ impl LaunchAgent {
             .unwrap()
     }
 
-    pub fn new_with_args(label: String, program_arguments: Vec<&str>) -> Self {
+    pub fn new_with_args(label: &str, program_arguments: Vec<&str>) -> Self {
         let program_arguments: Vec<String> =
             program_arguments.into_iter().map(String::from).collect();
 
